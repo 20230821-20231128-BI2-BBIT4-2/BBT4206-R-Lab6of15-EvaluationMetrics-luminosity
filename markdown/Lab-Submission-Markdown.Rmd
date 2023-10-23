@@ -1,0 +1,301 @@
+---
+title: "Business Intelligence Project"
+author: "<Specify your name here>"
+date: "<Specify the date when you submitted the lab>"
+output:
+  github_document: 
+    toc: yes
+    toc_depth: 4
+    fig_width: 6
+    fig_height: 4
+    df_print: default
+editor_options:
+  chunk_output_type: console
+---
+
+
+# Business Intelligence Lab Submission Markdown
+
+
+
+# Student Details {#student-details}
+
++---------------------------------------------------+---------------------------------------------+--------------------+
+| **Student ID Numbers and Names of Group Members** | | 1. 134982 - A - Austin Waswa              |                    |
+|                                                   |                                             |                    |
+|                                                   | | 2. 100230 - A - Richard Maana             |                    |
+|                                                   |                                             |                    |
+|                                                   | | 3. 134564 - A - Cynthia Omusundi          |                    |
+|                                                   |                                             |                    |
+|                                                   |                                             |                    |
+|                                                   |                                             |                    |
+|                                                   |                                             |                    |
++---------------------------------------------------+---------------------------------------------+--------------------+
+|                                                   | **GitHub Classroom Group Name**             | Luminosity         |
++---------------------------------------------------+---------------------------------------------+--------------------+
+| **Course Code**                                   | BBT4206                                     |                    |
++---------------------------------------------------+---------------------------------------------+--------------------+
+| **Course Name**                                   | Business Intelligence II                    |                    |
++---------------------------------------------------+---------------------------------------------+--------------------+
+| **Program**                                       | Bachelor of Business Information Technology |                    |
++---------------------------------------------------+---------------------------------------------+--------------------+
+| **Semester Duration**                             | 21^st^ August 2023 to 28^th^ November 2023  |                    |
++---------------------------------------------------+---------------------------------------------+--------------------+
+
+# Setup Chunk {#setup-chunk}
+
+**Note:** the following "*KnitR*" options have been set as the defaults in this markdown:\
+`knitr::opts_chunk$set(echo = TRUE, warning = FALSE, eval = TRUE, collapse = FALSE, tidy.opts = list(width.cutoff = 80), tidy = TRUE)`.
+
+More KnitR options are documented here <https://bookdown.org/yihui/rmarkdown-cookbook/chunk-options.html> and here <https://yihui.org/knitr/options/>.
+
+``` r
+knitr::opts_chunk$set(
+    eval = TRUE,
+    echo = TRUE,
+    warning = FALSE,
+    collapse = FALSE,
+    tidy = TRUE
+)
+```
+
+------------------------------------------------------------------------
+
+**Note:** the following "*R Markdown*" options have been set as the defaults in this markdown:
+
+> output:
+> github_document:\
+> toc: yes\
+> toc_depth: 4\
+> fig_width: 6\
+> fig_height: 4\
+> df_print: default
+>
+> editor_options:\
+> chunk_output_type: console
+
+---
+
+
+
+**Note:** the following "*R Markdown*" options have been set as the
+defaults:
+
+Installing and loading of required packages
+```{Code Chunk One}
+# Language server
+if (require("languageserver")) {
+  require("languageserver")
+} else {
+  install.packages("languageserver", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+# ggplot2 
+if (require("ggplot2")) {
+  require("ggplot2")
+} else {
+  install.packages("ggplot2", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+# caret 
+if (require("caret")) {
+  require("caret")
+} else {
+  install.packages("caret", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+# mlbench 
+if (require("mlbench")) {
+  require("mlbench")
+} else {
+  install.packages("mlbench", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+# pROC 
+if (require("pROC")) {
+  require("pROC")
+} else {
+  install.packages("pROC", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+# dplyr 
+if (require("dplyr")) {
+  require("dplyr")
+} else {
+  install.packages("dplyr", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+
+
+```
+
+
+Loading and viewing of the dataset
+```{Code Chunk Two}
+
+# Loading the dataset
+data(iris)
+
+# Viewing the dataset
+View(iris)
+iris_freq <- iris$Species
+cbind(frequency =
+        table(iris_freq),
+      percentage = prop.table(table(iris_freq)) * 100)
+
+```
+
+
+Splitting of the dataset into training and test data
+```{Code Chunk Three}
+
+train_index <- createDataPartition(iris$Species,
+                                   p = 0.75,
+                                   list = FALSE)
+
+iris_train <- iris[train_index, ]
+iris_test <- iris[-train_index, ]
+
+```
+
+
+Training the Model using the 5-fold cross validation re-sampling method
+```{Code Chunk Four}
+
+train_control <- trainControl(method = "cv", number = 5)
+
+```
+
+
+Training a Generalized Linear Model for prediction
+```{Code Chunk Five}
+
+set.seed(7)
+iris_model_rf  <-
+  train(Species ~ ., data = iris_train, method = "rf",
+        metric = "Accuracy", trControl = train_control)
+
+```
+
+
+Displaying the model performance
+```{Code Chunk Six}
+
+print(iris_model_rf)
+
+```
+
+
+Predictions of the model presented in a Confusion Matrix
+```{Code Chunk Seven}
+
+confusion_matrix <- confusionMatrix(predictions, iris_test$Species)
+print(confusion_matrix)
+
+confusion_data <- as.data.frame(as.table(confusion_matrix))
+
+```
+
+
+Graphical representation of the Confusion Matrix
+```{Code Chunk Eight}
+ggplot(data = confusion_data, aes(x = Reference, y = Prediction, fill = Freq)) +
+  geom_tile() +
+  geom_text(aes(label = Freq), vjust = 1) +
+  scale_fill_gradient(low = "lightblue", high = "blue") +
+  theme_minimal() +
+  labs(title = "Confusion Matrix")
+
+```
+
+
+Training the model using bootstrapping with 1000 repetitions
+```{Code Chunk Nine}
+
+train_control <- trainControl(method = "boot", number = 1000)
+
+```
+
+
+Training the linear regression model the value of diabetes
+```{Code Chunk Ten}
+
+Pima_model_logistic <-
+  train(diabetes ~ ., data = Pima_train,
+        method = "glm", family = binomial,
+        metric = "MSE",  
+        trControl = train_control)
+
+```
+
+
+Printing the predictions
+```{Code Chunk Eleven}
+
+print(predictions)
+
+```
+
+
+Calculating the mean squared error (MSE)
+```{Code Chunk Twelve}
+mse <- mean((as.numeric(predictions) - as.numeric(Pima_test$diabetes))^2)
+
+```
+
+
+Calculating and printing RMSE by taking the square root of MSE
+```{Code Chunk Thirteen}
+
+rmse <- sqrt(mse)
+print(paste("RMSE (MSE) =", rmse))
+
+```
+
+
+Training the k Nearest Neighbours Model
+```{Code Chunk Fourteen}
+
+iris_model_knn <- train(Species ~ ., data = iris_train, method = "knn",
+                        metric = "Accuracy", trControl = train_control)
+
+```
+
+
+Displaying the models performance
+```{Code Chunk Fifteen}
+
+print(iris_model_knn)
+
+```
+
+
+Computing the ROC curves for each class
+```{Code Chunk Sixteen}
+
+roc_curves <- lapply(unique(iris$Species), function(class_name) {
+  class_predictions <- as.numeric(predictions[class_name] > 0)
+  class_roc <- roc(iris_test$Species == class_name, class_predictions)
+  return(class_roc)
+})
+
+```
+
+
+Plot the ROC curves for each class
+```{Code Chunk Seventeen}
+
+colors <- rainbow(length(roc_curves))
+for (i in 1:length(roc_curves)) {
+  plot(roc_curves[[i]], col = colors[i], print.auc = TRUE, print.auc.x = 0.6, print.auc.y = 0.6, lwd = 2.5, add = (i > 1))
+}
+
+legend("bottomright", legend = unique(iris$Species), col = colors, lwd = 2.5)
+
+```
