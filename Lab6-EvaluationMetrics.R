@@ -150,12 +150,8 @@ if (require("pROC")) {
 }
 
 ## dplyr ----
-if (require("dplyr")) {
-  require("dplyr")
-} else {
-  install.packages("dplyr", dependencies = TRUE,
-                   repos = "https://cloud.r-project.org")
-}
+
+
 
 # 1. Accuracy and Cohen's Kappa ----
 # Accuracy is the percentage of correctly classified instances out of all
@@ -171,6 +167,7 @@ if (require("dplyr")) {
 
 ## 1.a. Load the dataset ----
 data(PimaIndiansDiabetes)
+
 
 ## 1.b. Determine the Baseline Accuracy ----
 # Identify the number of instances that belong to each class (distribution or
@@ -213,6 +210,9 @@ set.seed(7)
 diabetes_model_glm <-
   train(diabetes ~ ., data = pima_indians_diabetes_train, method = "glm",
         metric = "Accuracy", trControl = train_control)
+
+
+#. represents all other variables tp predict diabetes
 
 ## 1.e. Display the Model's Performance ----
 ### Option 1: Use the metric calculated by caret when training the model ----
